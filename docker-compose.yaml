@@ -1,0 +1,52 @@
+version: "3.7"
+services:
+  apollo-configservice:
+    image: registry.cn-hangzhou.aliyuncs.com/xionglinpeng/apollo-configservice:1.7.0-SNAPSHOT-alpine
+    container_name: apollo-configservice
+    ports:
+      - "30080:8080"
+    restart: always
+    environment: # 注意数据库连接中的&字符需要转义
+      DS_URL: "jdbc:mysql://[host]:3306/ApolloConfigDB?characterEncoding=utf8\\&useSSL=false"
+      DS_USERNAME: "root"
+      DS_PASSWORD: "[password]"
+    networks:
+      - network-apollo
+    volumes:
+      - volume-apollo:/opt/logs/
+  apollo-adminservice:
+    image: registry.cn-hangzhou.aliyuncs.com/xionglinpeng/apollo-adminservice:1.7.0-SNAPSHOT-alpine
+    container_name: apollo-adminservice
+    ports:
+      - "30090:8090"
+    restart: always
+    environment: # 注意数据库连接中的&字符需要转义
+      DS_URL: "jdbc:mysql://[host]:3306/ApolloConfigDB?characterEncoding=utf8\\&useSSL=false"
+      DS_USERNAME: "root"
+      DS_PASSWORD: "[password]"
+      EUREKA_INSTANCE_HOSTNAME: apollo-configservice # adminservice需要注册到eureka
+    networks:
+      - network-apollo
+    volumes:
+      - volume-apollo:/opt/logs/
+  apollo-portal:
+    image: registry.cn-hangzhou.aliyuncs.com/xionglinpeng/apollo-portal:1.7.0-SNAPSHOT-alpine
+    container_name: apollo-portal
+    ports:
+      - "30070:8070"
+    restart: always
+    environment: # 注意数据库连接中的&字符需要转义
+      DS_URL: "jdbc:mysql://[host]:3306/ApolloPortalDB?characterEncoding=utf8\\&useSSL=false"
+      DS_USERNAME: "root"
+      DS_PASSWORD: "[password]"
+      DEV_META: "http://apollo-configservice:8080" # 配置metaservice地址
+    networks:
+      - network-apollo
+    volumes:
+      - volume-apollo:/opt/logs/
+networks:
+  network-apollo:
+    external: true
+volumes:
+  volume-apollo:
+    external: true
